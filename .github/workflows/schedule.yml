@@ -1,0 +1,30 @@
+name: Daily SPY 0DTE Briefing
+
+on:
+  schedule:
+    # Runs at 13:45 UTC = 6:45 AM Arizona Time (MST) Monday through Friday
+    - cron: '45 13 * * 1-5'
+  workflow_dispatch: # Allows you to click a button to test it immediately
+
+jobs:
+  run-briefing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install required libraries
+        run: pip install yfinance requests google-genai
+
+      - name: Run SPY 0DTE Briefing Script
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python spy_briefing.py
