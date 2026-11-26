@@ -110,13 +110,25 @@ Write a crisp, high-signal SPY 0DTE Morning Battle Plan formatted cleanly for em
 5. $900 CASH ACCOUNT DISCIPLINE: Remind the trader to size entries at $300–$450 max (2–3 clean bullets), stick to ATM or 1-strike OTM contracts, use a strict -20% stop-loss, and avoid new entries after 11:30 AM MST.
 """
 
-client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-response = client.models.generate_content(
-  model="gemini-3.5-flash-lite",
-    contents=prompt,
-)
-briefing_body = response.text
+import time
+from google.genai import errors
 
+client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+
+for attempt in range(3):
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.5-flash-lite",
+            contents=prompt,
+        )
+        briefing_body = response.text
+        break
+    except errors.ServerError as exc:
+        if exc.code != 503 or attempt == 2:
+            raise
+        delay = (20, 60)[attempt]
+        print(f"Gemini busy. Retrying in {delay} seconds.")
+        time.sleep(delay)
 # 6. Send the Email via Gmail
 sender_email = os.environ["GMAIL_ADDRESS"]
 app_password = os.environ["GMAIL_APP_PASSWORD"]
