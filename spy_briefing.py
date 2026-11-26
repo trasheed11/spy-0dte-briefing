@@ -108,7 +108,7 @@ Write a crisp, high-signal SPY 0DTE Morning Battle Plan formatted cleanly for em
 
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 response = client.models.generate_content(
-    model="gemini-2.5-flash",
+    model="gemini-3.8-flash",
     contents=prompt,
 )
 briefing_body = response.text
