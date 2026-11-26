@@ -1,0 +1,50 @@
+name: Test Gmail Delivery
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  test-gmail:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test Gmail connection
+        env:
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import smtplib
+          import ssl
+          from email.message import EmailMessage
+
+          sender = os.environ["GMAIL_ADDRESS"].strip()
+          password = os.environ["GMAIL_APP_PASSWORD"]
+
+          if not sender or "@" not in sender:
+              raise ValueError("Gmail address missing or invalid")
+
+          if len(password) != 16 or any(c.isspace() for c in password):
+              raise ValueError("Invalid app password format")
+
+          print("Credential format: PASS", flush=True)
+
+          msg = EmailMessage()
+          msg["From"] = sender
+          msg["To"] = sender
+          msg["Subject"] = "SPY Briefing - Gmail Test"
+          msg.set_content("Your automated Gmail delivery is working!")
+
+          with smtplib.SMTP("smtp.gmail.com", 587, timeout=30) as server:
+              print("SMTP connection: PASS", flush=True)
+              server.ehlo()
+              server.starttls(context=ssl.create_default_context())
+              server.ehlo()
+              print("Secure connection: PASS", flush=True)
+              server.login(sender, password)
+              print("Gmail authentication: PASS", flush=True)
+              server.send_message(msg)
+              print("Email delivery: PASS", flush=True)
+          PY
