@@ -44,10 +44,12 @@ lower_em = premarket_price - expected_move
 finnhub_key = os.environ["FINNHUB_API_KEY"]
 
 # Economic Calendar for today
-cal_url = f"https://finnhub.io{today_str}&to={today_str}&token={finnhub_key}"
+cal_url = "https://finnhub.io/api/v1/calendar/economic"
 cal_events = []
 try:
-    cal_data = requests.get(cal_url, timeout=10).json().get("economicCalendar", [])
+    cal_response = requests.get(cal_url, params={"from": today_str, "to": today_str}, headers={"X-Finnhub-Token": finnhub_key}, timeout=10)
+    cal_response.raise_for_status()
+    cal_data = cal_response.json().get("economicCalendar", [])
     for ev in cal_data:
         if ev.get("country") == "US" and ev.get("impact") in ["high", "medium"]:
             # Convert UTC event time to Arizona (MST)
@@ -65,10 +67,12 @@ except Exception as e:
 calendar_text = "\n".join(cal_events) if cal_events else "- No major high/medium US economic releases scheduled today."
 
 # Top General Market Headlines
-news_url = f"https://finnhub.io{finnhub_key}"
+news_url = "https://finnhub.io/api/v1/news"
 headlines = []
 try:
-    news_data = requests.get(news_url, timeout=10).json()[:8]
+    news_response = requests.get(news_url, params={"category": "general"}, headers={"X-Finnhub-Token": finnhub_key}, timeout=10)
+    news_response.raise_for_status()
+    news_data = news_response.json()[:8]
     for item in news_data:
         headlines.append(f"- {item.get('headline')}")
 except Exception:
@@ -108,7 +112,7 @@ Write a crisp, high-signal SPY 0DTE Morning Battle Plan formatted cleanly for em
 
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 response = client.models.generate_content(
-    model="gemini-3.8-flash",
+  model="gemini-3.5-flash-lite",
     contents=prompt,
 )
 briefing_body = response.text
@@ -123,7 +127,7 @@ msg["To"] = sender_email
 msg["Subject"] = f"SPY 0DTE Battle Plan ({display_date}) | Pre: ${premarket_price:.2f} | EM: ±${expected_move:.2f}"
 msg.attach(MIMEText(briefing_body, "plain"))
 
-with smtplib.SMTP_SSL("://gmail.com", 465) as server:
+with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
     server.login(sender_email, app_password)
     server.send_message(msg)
 
