@@ -127,8 +127,10 @@ msg["To"] = sender_email
 msg["Subject"] = f"SPY 0DTE Battle Plan ({display_date}) | Pre: ${premarket_price:.2f} | EM: ±${expected_move:.2f}"
 msg.attach(MIMEText(briefing_body, "plain"))
 
-with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+with smtplib.SMTP("smtp.gmail.com", 587, timeout=60) as server:
+    server.ehlo()
+    server.starttls(context=__import__("ssl").create_default_context())
+    server.ehlo()
     server.login(sender_email, app_password)
     server.send_message(msg)
-
 print("SPY 0DTE Briefing sent successfully!")
