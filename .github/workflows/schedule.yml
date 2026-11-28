@@ -2,8 +2,8 @@ name: Daily SPY 0DTE Briefing
 
 on:
   schedule:
-    # Runs at 13:45 UTC = 6:45 AM Arizona Time (MST) Monday through Friday
-    - cron: '45 13 * * 1-5'
+     # Runs at 12:07 UTC = 5:07 AM Arizona Time (MST) Monday through Friday
+    - cron: '7 12 * * 1-5'
   workflow_dispatch: # Allows you to click a button to test it immediately
 
 jobs:
